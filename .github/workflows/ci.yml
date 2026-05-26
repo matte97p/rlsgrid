@@ -1,0 +1,58 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: rlsgrid_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check src tests
+      - name: Unit tests
+        run: pytest -q
+      - name: Smoke test CLI against live Postgres
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rlsgrid_test
+        run: |
+          psql "$DATABASE_URL" -f examples/blog/schema.sql
+          rlsgrid introspect --config examples/rlsgrid.toml
+          rlsgrid plan --config examples/rlsgrid.toml
+          rlsgrid gen pgtap --config examples/rlsgrid.toml --out /tmp/generated.sql
+          test -s /tmp/generated.sql
+          rlsgrid seed --config examples/rlsgrid.toml --tenants 3 --state-out /tmp/seed-state.json
+          test -s /tmp/seed-state.json
+          rlsgrid gen pgtap --config examples/rlsgrid.toml --from-state /tmp/seed-state.json --out /tmp/generated-cond.sql
+          test -s /tmp/generated-cond.sql
+          rlsgrid fuzz --config examples/rlsgrid.toml --tenants 3 \
+            --shields-out /tmp/badge.json --badge-out /tmp/badge.svg
+          test -s /tmp/badge.json && test -s /tmp/badge.svg
+          rlsgrid teardown --config examples/rlsgrid.toml --state /tmp/seed-state.json

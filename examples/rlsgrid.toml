@@ -1,0 +1,25 @@
+# rlsgrid.toml — example for the bundled blog schema in examples/blog/schema.sql
+
+[connection]
+url = "env:DATABASE_URL"
+schema_search_path = ["public"]
+
+[tenancy]
+mode = "jwt"
+tenant_column = "author_id"
+user_id_column = "id"
+auth_function = "auth.uid()"
+
+[roles]
+authenticated = "logged-in user"
+anon = "public unauthenticated"
+service_role = "bypass — should never be exposed client-side"
+
+[fuzz]
+iterations = 200
+seed = 42
+stop_on_first_breach = false
+
+[exclude]
+schemas = ["pg_catalog", "information_schema", "auth", "storage", "graphql", "extensions", "realtime", "supabase_functions"]
+tables = []
