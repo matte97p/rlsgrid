@@ -56,3 +56,32 @@ jobs:
             --shields-out /tmp/badge.json --badge-out /tmp/badge.svg
           test -s /tmp/badge.json && test -s /tmp/badge.svg
           rlsgrid teardown --config examples/rlsgrid.toml --state /tmp/seed-state.json
+
+  action-smoke:
+    runs-on: ubuntu-latest
+    needs: test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: rlsgrid_action_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply schema
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d rlsgrid_action_test -f examples/blog/schema.sql
+      - name: Run composite action against itself
+        uses: ./
+        with:
+          command: plan
+          config: examples/rlsgrid.toml
+          database-url: postgresql://postgres:postgres@localhost:5432/rlsgrid_action_test

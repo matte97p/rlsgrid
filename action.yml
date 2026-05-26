@@ -1,0 +1,139 @@
+name: rlsgrid
+description: >-
+  Schema-driven Row-Level Security audit and cross-tenant fuzz for Postgres
+  and Supabase. Reads your live schema, classifies every role × table × op
+  cell, and (optionally) probes for cross-tenant leaks. Posts a JSON report
+  the next step can act on.
+author: matte97p
+branding:
+  icon: shield
+  color: purple
+
+inputs:
+  command:
+    description: >-
+      rlsgrid subcommand to run. One of: introspect, plan, gen-pgtap, seed,
+      fuzz. Use `fuzz` to gate a PR on cross-tenant safety.
+    required: false
+    default: plan
+  config:
+    description: Path to rlsgrid.toml.
+    required: false
+    default: rlsgrid.toml
+  database-url:
+    description: >-
+      Postgres connection string. Stored in $DATABASE_URL for the run.
+      Never point this at production — rlsgrid refuses URLs matching
+      [safety].forbid_url_patterns in your config.
+    required: true
+  tenants:
+    description: Number of synthetic tenants to seed (seed and fuzz only).
+    required: false
+    default: "3"
+  python-version:
+    description: Python version used to install rlsgrid.
+    required: false
+    default: "3.12"
+  version:
+    description: >-
+      rlsgrid version to install. Defaults to the latest published release.
+      Pin in production (e.g. "0.2.0").
+    required: false
+    default: ""
+  pgtap-out:
+    description: Output path for `gen pgtap`. Ignored for other commands.
+    required: false
+    default: tests/rls/generated.sql
+  fail-on-breach:
+    description: >-
+      When `command` is `fuzz`, exit the step with a non-zero status if any
+      breach is detected. Set to "false" to keep going and inspect the JSON
+      in a follow-up step.
+    required: false
+    default: "true"
+
+outputs:
+  result-json:
+    description: Path to the rlsgrid JSON output captured during the run.
+    value: ${{ steps.run.outputs.result-json }}
+  breach-count:
+    description: Number of breaches found (only meaningful for the `fuzz` command).
+    value: ${{ steps.run.outputs.breach-count }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip
+
+    - name: Install rlsgrid
+      shell: bash
+      env:
+        RLSGRID_VERSION: ${{ inputs.version }}
+      run: |
+        python -m pip install --upgrade pip
+        if [ -n "$RLSGRID_VERSION" ]; then
+          pip install "rlsgrid==$RLSGRID_VERSION"
+        else
+          pip install rlsgrid
+        fi
+        rlsgrid --version
+
+    - name: Run rlsgrid
+      id: run
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+        RLSGRID_COMMAND: ${{ inputs.command }}
+        RLSGRID_CONFIG: ${{ inputs.config }}
+        RLSGRID_TENANTS: ${{ inputs.tenants }}
+        RLSGRID_PGTAP_OUT: ${{ inputs.pgtap-out }}
+        RLSGRID_FAIL_ON_BREACH: ${{ inputs.fail-on-breach }}
+      run: |
+        out="${RUNNER_TEMP}/rlsgrid-output.json"
+        set +e
+        case "$RLSGRID_COMMAND" in
+          introspect|plan)
+            rlsgrid "$RLSGRID_COMMAND" --config "$RLSGRID_CONFIG" --json > "$out"
+            rc=$?
+            ;;
+          seed)
+            rlsgrid seed --config "$RLSGRID_CONFIG" --tenants "$RLSGRID_TENANTS" --json > "$out"
+            rc=$?
+            ;;
+          fuzz)
+            rlsgrid fuzz --config "$RLSGRID_CONFIG" --tenants "$RLSGRID_TENANTS" --json > "$out"
+            rc=$?
+            ;;
+          gen-pgtap|gen_pgtap)
+            rlsgrid gen pgtap --config "$RLSGRID_CONFIG" --out "$RLSGRID_PGTAP_OUT"
+            rc=$?
+            printf '{"pgtap_out":"%s"}' "$RLSGRID_PGTAP_OUT" > "$out"
+            ;;
+          *)
+            echo "::error::unknown rlsgrid command: $RLSGRID_COMMAND" >&2
+            exit 2
+            ;;
+        esac
+        set -e
+
+        echo "result-json=$out" >> "$GITHUB_OUTPUT"
+
+        if [ "$RLSGRID_COMMAND" = "fuzz" ]; then
+          breaches=$(python -c "import json,sys; print(len(json.load(open(sys.argv[1])).get('breaches', [])))" "$out")
+          echo "breach-count=$breaches" >> "$GITHUB_OUTPUT"
+          if [ "$breaches" -gt 0 ] && [ "$RLSGRID_FAIL_ON_BREACH" = "true" ]; then
+            echo "::error::rlsgrid detected $breaches breach(es). See $out for details."
+            cat "$out"
+            exit 1
+          fi
+        else
+          echo "breach-count=0" >> "$GITHUB_OUTPUT"
+          if [ "$rc" -ne 0 ]; then
+            cat "$out" || true
+            exit "$rc"
+          fi
+        fi

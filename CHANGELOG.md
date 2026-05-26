@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- GitHub Action `matte97p/rlsgrid@v1` lives in this repo (was previously a
+  separate `matte97p/rlsgrid-action` repo, now archived). Composite action
+  with `command`, `config`, `database-url`, `tenants`, `python-version`,
+  `version`, `pgtap-out`, `fail-on-breach` inputs and `result-json` +
+  `breach-count` outputs.
+
+### Added
 - Prod-guard: `seed` and `fuzz` refuse to run when `connection.url`
   matches any pattern in `[safety].forbid_url_patterns`. Set
   `RLSGRID_I_KNOW_WHAT_IM_DOING=1` to override.

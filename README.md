@@ -265,6 +265,60 @@ to add the test.
 They compose well: keep your high-signal `supabase-test-helpers` cases for
 the business rules you care about most, and let `rlsgrid` watch the floor.
 
+## GitHub Action
+
+The repo ships a composite GitHub Action so dropping rlsgrid into a CI
+workflow is one step:
+
+```yaml
+- uses: matte97p/rlsgrid@v1
+  with:
+    command: fuzz
+    config: rlsgrid.toml
+    database-url: ${{ secrets.STAGING_DB_URL }}
+    fail-on-breach: true
+```
+
+Inputs: `command` (introspect/plan/gen-pgtap/seed/fuzz), `config`,
+`database-url` (required), `tenants`, `python-version`, `version` (pin a
+rlsgrid release), `pgtap-out`, `fail-on-breach`.
+
+Outputs: `result-json` (path to JSON report), `breach-count`.
+
+Full example workflow that gates a PR on cross-tenant leaks against a
+disposable Postgres service:
+
+```yaml
+name: rls-fuzz
+on:
+  pull_request:
+    paths: ["supabase/migrations/**", "rlsgrid.toml"]
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - run: psql "$PG" -f supabase/migrations/*.sql
+        env:
+          PG: postgresql://postgres:postgres@localhost:5432/postgres
+      - uses: matte97p/rlsgrid@v1
+        with:
+          command: fuzz
+          database-url: postgresql://postgres:postgres@localhost:5432/postgres
+          tenants: "5"
+```
+
+Pin to a specific release in production (`matte97p/rlsgrid@v0.1.0`).
+
 ## Status
 
 Alpha. Stable enough to run on real schemas; the pgTAP output and config
