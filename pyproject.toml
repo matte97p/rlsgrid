@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rlsgrid"
-version = "0.1.2"
+version = "0.2.0"
 description = "Schema-driven Row-Level Security test matrix generator and cross-tenant fuzzer for PostgreSQL and Supabase."
 readme = "README.md"
 license = { file = "LICENSE" }

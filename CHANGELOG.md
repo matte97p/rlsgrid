@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-27
+
+Fewer steps, no manual config, nothing left behind.
+
+### Added
+- `rlsgrid init --from-db` reads the live schema and writes an annotated
+  config: it guesses the tenant column (preferring foreign keys named like
+  `tenant_id` / `org_id` / `account_id` / …), detects the tenant root table
+  via the FK graph, recognises Supabase (roles + schema excludes), and lists
+  its detection notes so you can sanity-check them.
+- `rlsgrid check` — the headline command. Seeds synthetic tenants, fuzzes
+  cross-tenant access, and tears everything down in one shot. Exit 1 on any
+  breach, no state files, nothing left in the database. Ideal for a first run
+  or a CI gate.
+- `rlsgrid fuzz --cleanup/--no-cleanup` (default `--cleanup`) removes the
+  synthetic tenants the run seeded.
+
+### Fixed
+- Cross-tenant SELECT fuzz on the tenant root table silently errored
+  (`column "org_id" does not exist`) and was skipped — so the root table,
+  where tenant identity lives, was never actually probed. SELECT now matches
+  the target's rows by their seeded primary keys, like UPDATE/DELETE.
+
 ## [0.1.2] — 2026-05-27
 
 ### Added

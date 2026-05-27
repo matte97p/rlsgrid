@@ -147,7 +147,10 @@ def _probe_jwt(
     tenant_col = config.tenancy.tenant_column
     target_rows = target.rows(cell.schema, cell.table)
 
-    if cell.operation in ("UPDATE", "DELETE") and not target_rows:
+    # SELECT/UPDATE/DELETE identify the target's rows by their seeded primary
+    # keys (works for the tenant root table, which has no tenant column);
+    # INSERT does not need an existing row.
+    if cell.operation != "INSERT" and not target_rows:
         return _Skip("no target row on this table")
 
     try:
@@ -156,7 +159,7 @@ def _probe_jwt(
             cur.execute(f'SET LOCAL ROLE "{cell.role}"')
             _set_jwt_claims(cur, config.tenancy, actor)
             if cell.operation == "SELECT":
-                return _do_select(cur, cell, actor, target, qualified, tenant_col)
+                return _do_select(cur, cell, actor, target, target_rows[0], qualified)
             if cell.operation == "INSERT":
                 return _do_insert(cur, cell, actor, target, qualified, tenant_col, introspection)
             if cell.operation == "UPDATE":
@@ -177,13 +180,18 @@ def _do_select(
     cell: MatrixCell,
     actor: SeededTenant,
     target: SeededTenant,
+    row: SeededRow,
     qualified: str,
-    tenant_col: str,
-) -> Breach | None:
-    cur.execute(f'SELECT count(*) FROM {qualified} WHERE "{tenant_col}" = %s', (target.tenant_id,))
+) -> Breach | None | _Skip:
+    """Can the actor SELECT a specific target-owned row (matched by PK)?"""
+    if not row.pk_columns:
+        return _Skip("table has no primary key")
+    where = " AND ".join(f'"{c}" = %s' for c in row.pk_columns)
+    values = [row.pk_value(c) for c in row.pk_columns]
+    cur.execute(f"SELECT count(*) FROM {qualified} WHERE {where}", values)
     leaked = int(cur.fetchone()[0])
     if leaked > 0:
-        return _breach(cell, actor, target, f"{leaked} rows visible across tenants")
+        return _breach(cell, actor, target, "target-owned row visible across tenants")
     return None
 
 

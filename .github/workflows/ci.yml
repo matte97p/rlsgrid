@@ -77,6 +77,13 @@ jobs:
           ! grep -q 'SET ctid' /tmp/mt-gen.sql
           rlsgrid fuzz --config examples/multitenant/rlsgrid.toml --tenants 3
           rlsgrid teardown --config examples/multitenant/rlsgrid.toml --state /tmp/mt-seed.json
+          # init --from-db should detect org_id + the orgs root table.
+          rlsgrid init --from-db --out /tmp/auto.toml --force
+          grep -q 'tenant_column = "org_id"' /tmp/auto.toml
+          # one-shot check must run clean (no skipped probes) and leave nothing behind.
+          rlsgrid check --config /tmp/auto.toml --tenants 3 --json > /tmp/check.json
+          python -c "import json; d=json.load(open('/tmp/check.json')); assert d['ok'], d; assert d['skipped']==0, d['skip_reasons']"
+          python -c "import os,psycopg; c=psycopg.connect(os.environ['DATABASE_URL']); cur=c.cursor(); cur.execute('SELECT count(*) FROM public.orgs'); n=cur.fetchone()[0]; assert n==0, f'{n} rows left after check'"
 
   pgtap:
     # Generate the pgTAP suite against the rich schema and actually run it

@@ -14,10 +14,11 @@ from rich.console import Console
 from rich.table import Table
 
 from . import __version__
+from .autodetect import detect, render_config
 from .badge import from_fuzz_report, make_shields_json, make_svg
 from .config import DEFAULT_CONFIG_TEMPLATE, Config
 from .emitters import pgtap as pgtap_emitter
-from .fixtures import seed_tenants, teardown_from_state
+from .fixtures import seed_tenants, teardown_from_state, teardown_state
 from .fuzz import chaos
 from .introspect import introspect as run_introspect
 from .matrix import Expected, build_matrix, summarize
@@ -93,14 +94,50 @@ def main(ctx: click.Context) -> None:
 @main.command()
 @click.option("--out", "out_path", default="rlsgrid.toml", show_default=True)
 @click.option("--force", is_flag=True, help="Overwrite existing config.")
-def init(out_path: str, force: bool) -> None:
-    """Write a starter rlsgrid.toml in the current directory."""
+@click.option(
+    "--from-db",
+    "from_db",
+    is_flag=True,
+    help="Connect to DATABASE_URL, introspect the schema, and pre-fill the config.",
+)
+@click.option(
+    "--config",
+    "probe_config",
+    default=None,
+    help="Existing config to read connection.url from when using --from-db (optional).",
+)
+def init(out_path: str, force: bool, from_db: bool, probe_config: str | None) -> None:
+    """Write a starter rlsgrid.toml (optionally auto-filled from the database)."""
     path = Path(out_path)
     if path.exists() and not force:
         console.print(f"[yellow]{path} already exists.[/yellow] Pass --force to overwrite.")
         sys.exit(1)
-    path.write_text(DEFAULT_CONFIG_TEMPLATE)
-    console.print(f"[green]✓[/green] Wrote {path}")
+
+    if not from_db:
+        path.write_text(DEFAULT_CONFIG_TEMPLATE)
+        console.print(f"[green]✓[/green] Wrote {path}")
+        return
+
+    # Build a throwaway config pointing at the DB to introspect it.
+    if probe_config and Path(probe_config).exists():
+        cfg = Config.load(probe_config)
+    else:
+        import os
+
+        url = os.environ.get("DATABASE_URL")
+        if not url:
+            console.print("[red]--from-db needs DATABASE_URL set (or --config pointing at a config with one).[/red]")
+            sys.exit(2)
+        from .config import ConnectionConfig
+
+        cfg = Config(connection=ConnectionConfig(url=url))
+
+    result = _introspect(cfg)
+    detection = detect(result)
+    path.write_text(render_config(detection))
+    console.print(f"[green]✓[/green] Wrote {path} from live schema. Review the detection notes:")
+    for note in detection.notes:
+        console.print(f"  [dim]- {note}[/dim]")
 
 
 @main.command()
@@ -344,6 +381,13 @@ def seed(config_path: str, tenants: int, as_json: bool, state_out: str | None) -
     default=None,
     help="Write a static SVG badge to PATH after the run.",
 )
+@click.option(
+    "--cleanup/--no-cleanup",
+    "cleanup",
+    default=True,
+    show_default=True,
+    help="Delete the synthetic tenants this run seeded once it finishes.",
+)
 def fuzz(
     config_path: str,
     tenants: int,
@@ -351,6 +395,7 @@ def fuzz(
     state_out: str | None,
     shields_out: str | None,
     badge_out: str | None,
+    cleanup: bool,
 ) -> None:
     """Seed N tenants and run cross-tenant chaos. Exit 1 on any breach."""
     cfg = _load(config_path)
@@ -365,9 +410,14 @@ def fuzz(
             _dump_json({"ok": False, "error": msg})
         else:
             console.print(f"[red]{msg}[/red]")
+        if cleanup:
+            teardown_state(seed_report.to_state(), cfg)
         sys.exit(2)
 
     report = _run_writes(chaos.run, result, cfg, seeded_tenants=seed_report.tenants)
+
+    if cleanup:
+        _run_writes(teardown_state, seed_report.to_state(), cfg)
 
     if shields_out or badge_out:
         badge = from_fuzz_report(
@@ -460,6 +510,74 @@ def teardown(config_path: str, state_path: str, as_json: bool) -> None:
     )
     for qualified, n in sorted(report.deleted.items()):
         console.print(f"  - {qualified}: {n}")
+
+
+@main.command()
+@click.option("--config", "config_path", default="rlsgrid.toml", show_default=True)
+@click.option("--tenants", default=3, show_default=True, type=int)
+@click.option("--json", "as_json", is_flag=True, help="Emit a JSON document instead of a table.")
+def check(config_path: str, tenants: int, as_json: bool) -> None:
+    """One-shot safety check: seed, fuzz, tear down. Exit 1 on any breach.
+
+    The headline command — no state files, nothing left behind. Ideal for a
+    first run or a CI gate.
+    """
+    cfg = _load(config_path)
+    _guard_writes(cfg)
+    result = _introspect(cfg)
+    seed_report = _run_writes(seed_tenants, result, cfg, tenants=tenants)
+    try:
+        if len(seed_report.tenants) < 2:
+            msg = "Seeder produced fewer than 2 tenants — cannot run cross-tenant checks."
+            if as_json:
+                _dump_json({"ok": False, "error": msg})
+            else:
+                console.print(f"[red]{msg}[/red]")
+            sys.exit(2)
+        report = _run_writes(chaos.run, result, cfg, seeded_tenants=seed_report.tenants)
+    finally:
+        _run_writes(teardown_state, seed_report.to_state(), cfg)
+
+    if as_json:
+        _dump_json(
+            {
+                "ok": report.ok,
+                "iterations": report.iterations,
+                "skipped": report.skipped,
+                "skip_reasons": dict(report.skip_reasons),
+                "breaches": [
+                    {
+                        "actor_role": b.actor_role,
+                        "actor_tenant": b.actor_tenant,
+                        "target_tenant": b.target_tenant,
+                        "schema": b.schema,
+                        "table": b.table,
+                        "operation": b.operation,
+                        "detail": b.detail,
+                    }
+                    for b in report.breaches
+                ],
+            }
+        )
+        sys.exit(0 if report.ok else 1)
+
+    if report.ok:
+        console.print(
+            f"[green]✓ Safe[/green] — no cross-tenant breaches in "
+            f"{report.iterations} iterations ({report.skipped} skipped)."
+        )
+        _print_skip_reasons(report)
+        return
+
+    console.print(f"[red]✗ {len(report.breaches)} cross-tenant breach(es) detected[/red]")
+    for b in report.breaches:
+        console.print(
+            f"  [red]LEAK[/red] role={b.actor_role} actor_tenant={b.actor_tenant} "
+            f"→ target_tenant={b.target_tenant} on {b.schema}.{b.table} {b.operation}: "
+            f"{b.detail}"
+        )
+    _print_skip_reasons(report)
+    sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -50,24 +50,27 @@ pip install rlsgrid
 ## Quickstart
 
 ```bash
-# 1. Generate a starter config.
-rlsgrid init
-
-# 2. Point DATABASE_URL at your DB.
+# 1. Point DATABASE_URL at a non-production database.
 export DATABASE_URL=postgresql://user:pw@host/db
 
-# 3. See what rlsgrid found.
-rlsgrid introspect
+# 2. Generate a config by reading the live schema — rlsgrid guesses the
+#    tenant column, detects the tenant root table, and recognises Supabase.
+rlsgrid init --from-db
 
-# 4. See the matrix — every role × table × op cell with expected outcome.
-rlsgrid plan
+# 3. One-shot safety check: seed synthetic tenants, fuzz cross-tenant
+#    access, tear everything down. Exit 1 on any breach.
+rlsgrid check --tenants 5
+```
 
-# 5. Emit a pgTAP suite covering every ALLOW/DENY cell.
-rlsgrid gen pgtap --out tests/rls/generated.sql
+That's the whole loop. `check` leaves nothing behind and is the command to
+drop into CI. The lower-level commands are there when you want them:
+
+```bash
+rlsgrid introspect                 # tables, RLS state, policies
+rlsgrid plan                       # the role × table × op matrix
+rlsgrid gen pgtap --out tests/rls/generated.sql   # emit a pgTAP suite
 pg_prove -d "$DATABASE_URL" tests/rls/generated.sql
-
-# 6. Chaos-fuzz cross-tenant SELECT leaks.
-rlsgrid fuzz --tenants 5
+rlsgrid fuzz --tenants 5           # fuzz only (auto-cleans up)
 ```
 
 ## What you get

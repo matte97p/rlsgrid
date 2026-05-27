@@ -113,28 +113,84 @@ def teardown_from_state(
     teardown still works after the schema has changed.
     """
     state = json.loads(Path(state_path).read_text())
-    tenant_column = state.get("tenant_column") or config.tenancy.tenant_column
-    tenant_ids = [t["tenant_id"] for t in state["tenants"]]
-    if not tenant_ids:
-        return TeardownReport()
+    return teardown_state(state, config)
 
-    qualified_tables: set[str] = set()
-    for tenant in state["tenants"]:
-        qualified_tables.update(tenant["rows_per_table"].keys())
+
+def teardown_state(
+    state: dict,
+    config: Config,
+) -> TeardownReport:
+    """Delete seeded rows given an in-memory state dict (see SeedReport.to_state).
+
+    Rows are removed by their seeded primary keys — this works for the tenant
+    root table (which has no tenant column) as well as children, and never
+    touches rows the seeder did not create. Tables are processed in reverse
+    seeding order (children before parents) so foreign keys do not block the
+    delete; any residual FK failures are retried across a few passes.
+    """
+    # Collect rows per table, preserving first-seen (seeding) order.
+    rows_by_table: dict[str, list[dict]] = {}
+    for tenant in state.get("tenants", []):
+        for qualified, rows in tenant["rows_per_table"].items():
+            rows_by_table.setdefault(qualified, []).extend(rows)
 
     report = TeardownReport()
+    if not rows_by_table:
+        return report
+
+    # Reverse seeding order ⇒ children first.
+    order = list(reversed(rows_by_table.keys()))
     with psycopg.connect(config.connection.url) as conn:
         conn.autocommit = True
-        for qualified in sorted(qualified_tables):
-            schema, _, name = qualified.partition(".")
-            sql = f'DELETE FROM "{schema}"."{name}" WHERE "{tenant_column}" = ANY(%s)'
-            try:
-                with conn.cursor() as cur:
-                    cur.execute(sql, (tenant_ids,))
-                    report.deleted[qualified] = cur.rowcount or 0
-            except psycopg.Error as exc:
-                report.errors[qualified] = f"{type(exc).__name__}: {exc}".splitlines()[0][:200]
+        pending = order
+        for _pass in range(3):
+            still_failing: list[str] = []
+            for qualified in pending:
+                rows = rows_by_table[qualified]
+                if not rows:
+                    continue
+                ok, deleted, err = _delete_rows_by_pk(conn, qualified, rows)
+                if ok:
+                    report.deleted[qualified] = deleted
+                    report.errors.pop(qualified, None)
+                else:
+                    report.errors[qualified] = err or "unknown error"
+                    still_failing.append(qualified)
+            if not still_failing:
+                break
+            pending = still_failing
     return report
+
+
+def _delete_rows_by_pk(
+    conn: psycopg.Connection,
+    qualified: str,
+    rows: list[dict],
+) -> tuple[bool, int, str | None]:
+    schema, _, name = qualified.partition(".")
+    pk_cols = list(rows[0].keys())
+    if not pk_cols:
+        return True, 0, None
+    table = f'"{schema}"."{name}"'
+
+    if len(pk_cols) == 1:
+        col = pk_cols[0]
+        values = [r[col] for r in rows]
+        sql = f'DELETE FROM {table} WHERE "{col}" = ANY(%s)'
+        params: list = [values]
+    else:
+        cond = " OR ".join(
+            "(" + " AND ".join(f'"{c}" = %s' for c in pk_cols) + ")" for _ in rows
+        )
+        params = [r[c] for r in rows for c in pk_cols]
+        sql = f"DELETE FROM {table} WHERE {cond}"
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            return True, cur.rowcount or 0, None
+    except psycopg.Error as exc:
+        return False, 0, f"{type(exc).__name__}: {exc}".splitlines()[0][:200]
 
 
 def seed_tenants(
