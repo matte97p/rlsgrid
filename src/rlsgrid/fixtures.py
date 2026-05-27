@@ -23,7 +23,7 @@ from psycopg.rows import dict_row
 
 from .config import Config
 from .introspect import ColumnInfo, ForeignKeyInfo, IntrospectionResult, TableInfo
-from .synth import synth_value
+from .synth import satisfy_check, synth_value
 
 
 @dataclass
@@ -614,5 +614,10 @@ def _resolve_value(
         return _SKIP
     if column.nullable:
         return _SKIP
+    checked = satisfy_check(
+        introspection.check_defs.get((column.schema, column.table), []), column.name
+    )
+    if checked is not None:
+        return checked
     enum_labels = introspection.labels_for_enum(column.type_name)
     return synth_value(column.type_name, enum_labels=enum_labels)

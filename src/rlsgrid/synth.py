@@ -7,6 +7,7 @@ touches one file.
 
 from __future__ import annotations
 
+import re
 import uuid
 
 # Built-in scalar handling for the common Postgres `typname` values.
@@ -42,3 +43,46 @@ def synth_value(
     if "inet" in type_name or "cidr" in type_name:
         return "0.0.0.0/0"
     return "rlsgrid-fixture"
+
+
+def _num(s: str) -> object:
+    return float(s) if "." in s else int(s)
+
+
+def satisfy_check(defs: list[str], column: str) -> object | None:
+    """Pick a value satisfying simple CHECK constraints on `column`, or None.
+
+    Handles the common shapes from `pg_get_constraintdef`:
+    - `col = ANY (ARRAY['a'::text, 'b'::text])`  → 'a'
+    - `col = 'x'::text` / `col = 5`              → 'x' / 5
+    - `col >= 1 AND col <= 5`                    → 1
+    - `col > 0`                                  → 1
+    - `col <= 100` (no lower bound)              → 100
+    Anything more complex returns None and the caller falls back to synth.
+    """
+    col = re.escape(column)
+    for d in defs:
+        m = re.search(rf"\b{col}\b\s*=\s*ANY\s*\(ARRAY\[(.*?)\]", d, re.S)
+        if m:
+            strings = re.findall(r"'([^']*)'", m.group(1))
+            if strings:
+                return strings[0]
+            nums = re.findall(r"-?\d+(?:\.\d+)?", m.group(1))
+            if nums:
+                return _num(nums[0])
+        m = re.search(rf"\b{col}\b\s*=\s*'([^']*)'", d)
+        if m:
+            return m.group(1)
+        m = re.search(rf"\b{col}\b\s*=\s*(-?\d+(?:\.\d+)?)", d)
+        if m:
+            return _num(m.group(1))
+        m = re.search(rf"\b{col}\b\s*>=\s*(-?\d+)", d)
+        if m:
+            return int(m.group(1))
+        m = re.search(rf"\b{col}\b\s*>\s*(-?\d+)", d)
+        if m:
+            return int(m.group(1)) + 1
+        m = re.search(rf"\b{col}\b\s*<=\s*(-?\d+)", d)
+        if m:
+            return int(m.group(1))
+    return None

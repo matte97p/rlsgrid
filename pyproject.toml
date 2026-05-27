@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rlsgrid"
-version = "0.4.0"
+version = "0.5.0"
 description = "Schema-driven Row-Level Security test matrix generator and cross-tenant fuzzer for PostgreSQL and Supabase."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -42,6 +42,9 @@ dev = [
 
 [project.scripts]
 rlsgrid = "rlsgrid.cli:main"
+
+[project.entry-points.pytest11]
+rlsgrid = "rlsgrid.pytest_plugin"
 
 [project.urls]
 Homepage = "https://github.com/matte97p/rlsgrid"

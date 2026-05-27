@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-05-27
+
+### Added
+- `plan --explain` adds a column explaining each cell's label (no grant /
+  RLS off / no matching policy / policy gates rows / bypass role). The reason
+  is also in `plan --json`.
+- CHECK-constraint-aware seeding: the seeder reads `pg_get_constraintdef` and
+  picks a value that satisfies simple CHECKs (`= ANY(ARRAY[...])`, equality,
+  `BETWEEN` / `>=` / `>` / `<=`), so tables like `tasks(priority CHECK 1..5)`
+  or status-enum columns seed instead of being skipped on a `23514`.
+- SARIF output: `check --sarif-out report.sarif` (and `fuzz --sarif-out`)
+  writes SARIF 2.1.0 so breaches can be uploaded to GitHub code scanning and
+  show up in the repo's Security tab.
+- pytest plugin: installing rlsgrid registers a `rlsgrid` fixture and
+  `--rlsgrid-config` / `--rlsgrid-tenants` options, so you can gate your
+  existing suite — `assert rlsgrid.check().ok`. The check seeds, fuzzes, and
+  tears down; disable with `-p no:rlsgrid`.
+- Issue templates (bug / feature) with a docs + recipes contact-link.
+
 ## [0.4.0] — 2026-05-27
 
 Both improvements were surfaced by dogfooding rlsgrid against the real

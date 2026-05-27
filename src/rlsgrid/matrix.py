@@ -27,6 +27,7 @@ class MatrixCell:
     operation: str
     expected: Expected
     applicable_policies: tuple[str, ...]  # policy names that match this cell
+    reason: str = ""  # human-readable why behind `expected`
 
     @property
     def qualified_table(self) -> str:
@@ -60,7 +61,7 @@ def build_matrix(
     for table in introspection.tables:
         for role, purpose in role_entries.items():
             for op in OPERATIONS:
-                expected, applicable = _classify(
+                expected, applicable, reason = _classify(
                     table,
                     role,
                     op,
@@ -77,6 +78,7 @@ def build_matrix(
                         operation=op,
                         expected=expected,
                         applicable_policies=tuple(p.name for p in applicable),
+                        reason=reason,
                     )
                 )
     return cells
@@ -89,7 +91,7 @@ def _classify(
     policies: list[PolicyInfo],
     introspection: IntrospectionResult,
     grants_known: bool,
-) -> tuple[Expected, list[PolicyInfo]]:
+) -> tuple[Expected, list[PolicyInfo], str]:
     if (
         grants_known
         and not _is_bypass_role(role)
@@ -97,13 +99,13 @@ def _classify(
     ):
         # No table privilege → the role cannot perform the operation at all,
         # so RLS state is moot. Not an exposure.
-        return Expected.DENY, []
+        return Expected.DENY, [], "no grant on table"
 
     if not table.rls_enabled:
-        return Expected.UNRESTRICTED, []
+        return Expected.UNRESTRICTED, [], "RLS disabled and role is granted"
 
     if _is_bypass_role(role) and not table.rls_forced:
-        return Expected.UNRESTRICTED, []
+        return Expected.UNRESTRICTED, [], "role bypasses RLS (BYPASSRLS / not forced)"
 
     applicable = [
         p
@@ -114,12 +116,12 @@ def _classify(
     ]
 
     if not applicable:
-        return Expected.DENY, []
+        return Expected.DENY, [], "RLS enabled, no matching policy"
 
     has_gate = any(p.qual or p.with_check for p in applicable)
     if has_gate:
-        return Expected.CONDITIONAL, applicable
-    return Expected.ALLOW, applicable
+        return Expected.CONDITIONAL, applicable, "policy gates rows (USING / WITH CHECK)"
+    return Expected.ALLOW, applicable, "permissive policy with no row filter"
 
 
 _BYPASS_ROLES = {"service_role", "postgres", "supabase_admin"}

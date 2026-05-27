@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://matte97p.github.io/rlsgrid/
+    about: Quickstart, config recipes, and the CLI reference.
+  - name: Config recipes (Supabase, Prisma, Drizzle, SQLAlchemy, Rails)
+    url: https://github.com/matte97p/rlsgrid/blob/main/docs/RECIPES.md
+    about: Starting rlsgrid.toml for common stacks before opening an issue.

@@ -67,6 +67,7 @@ class IntrospectionResult:
     primary_keys: dict[tuple[str, str], tuple[str, ...]] = field(default_factory=dict)
     enum_labels: dict[str, list[str]] = field(default_factory=dict)
     tables_with_checks: set[tuple[str, str]] = field(default_factory=set)
+    check_defs: dict[tuple[str, str], list[str]] = field(default_factory=dict)
     grants: set[tuple[str, str, str, str]] = field(default_factory=set)  # (grantee, schema, table, privilege)
 
     def policies_for(self, schema: str, table: str) -> list[PolicyInfo]:
@@ -211,8 +212,9 @@ ORDER BY t.typname, e.enumsortorder
 """
 
 _CHECK_QUERY = """
-SELECT DISTINCT n.nspname AS schema,
-       cl.relname AS table
+SELECT n.nspname AS schema,
+       cl.relname AS table,
+       pg_get_constraintdef(con.oid) AS definition
 FROM pg_constraint con
 JOIN pg_class cl ON cl.oid = con.conrelid
 JOIN pg_namespace n ON n.oid = cl.relnamespace
@@ -320,10 +322,11 @@ def introspect(config: Config) -> IntrospectionResult:
 
         cur.execute(_CHECK_QUERY, (exclude_schemas,))
         for row in cur.fetchall():
-            schema, table = row
+            schema, table, definition = row
             if _is_excluded_table(schema, table, config):
                 continue
             result.tables_with_checks.add((schema, table))
+            result.check_defs.setdefault((schema, table), []).append(definition)
 
         cur.execute(_GRANT_QUERY, (exclude_schemas,))
         for row in cur.fetchall():

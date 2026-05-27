@@ -64,11 +64,25 @@ breach, so it drops straight into CI. A leak looks like:
 
 ```bash
 rlsgrid introspect          # tables, RLS state, policies
-rlsgrid plan                # the full matrix
+rlsgrid plan --explain      # the full matrix, with a "why" column
 rlsgrid gen pgtap --out tests/rls/generated.sql   # emit a pgTAP suite
 rlsgrid fuzz --tenants 5    # fuzz only (auto-cleans up)
 rlsgrid seed --dry-run      # show the seed plan without writing
+rlsgrid check --sarif-out rls.sarif   # SARIF for GitHub code scanning
 ```
+
+### From pytest
+
+Installing rlsgrid registers a `rlsgrid` fixture, so you can gate your
+existing suite:
+
+```python
+def test_no_cross_tenant_leaks(rlsgrid):
+    report = rlsgrid.check()
+    assert report.ok, [b.detail for b in report.breaches]
+```
+
+Point it with `--rlsgrid-config path/to/rlsgrid.toml`.
 
 Config for your stack — Supabase, Prisma, Drizzle, SQLAlchemy, Rails,
 function-based access checks — is in [docs/RECIPES.md](docs/RECIPES.md).

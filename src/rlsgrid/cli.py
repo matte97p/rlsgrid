@@ -23,6 +23,7 @@ from .fuzz import chaos
 from .introspect import introspect as run_introspect
 from .matrix import Expected, build_matrix, summarize
 from .safety import ProdGuardViolation, assert_safe_to_write
+from .sarif import build_sarif
 
 console = Console()
 
@@ -200,7 +201,8 @@ def introspect(config_path: str, as_json: bool) -> None:
 @click.option("--config", "config_path", default="rlsgrid.toml", show_default=True)
 @click.option("--show", type=click.Choice(["all", "deny", "allow", "conditional", "unrestricted"]), default="all")
 @click.option("--json", "as_json", is_flag=True, help="Emit a JSON document instead of a table.")
-def plan(config_path: str, show: str, as_json: bool) -> None:
+@click.option("--explain", is_flag=True, help="Add a column explaining why each cell got its label.")
+def plan(config_path: str, show: str, as_json: bool, explain: bool) -> None:
     """Print the role × table × op matrix and expected outcomes."""
     cfg = _load(config_path)
     result = _introspect(cfg)
@@ -218,6 +220,7 @@ def plan(config_path: str, show: str, as_json: bool) -> None:
                         "operation": c.operation,
                         "expected": c.expected.value,
                         "policies": list(c.applicable_policies),
+                        "reason": c.reason,
                     }
                     for c in visible
                 ],
@@ -232,6 +235,8 @@ def plan(config_path: str, show: str, as_json: bool) -> None:
     table.add_column("Op")
     table.add_column("Expected")
     table.add_column("Policies", overflow="fold")
+    if explain:
+        table.add_column("Why", overflow="fold")
 
     for cell in visible:
         color = {
@@ -240,13 +245,16 @@ def plan(config_path: str, show: str, as_json: bool) -> None:
             Expected.CONDITIONAL: "yellow",
             Expected.UNRESTRICTED: "magenta",
         }[cell.expected]
-        table.add_row(
+        row = [
             cell.role,
             cell.qualified_table,
             cell.operation,
             f"[{color}]{cell.expected.value}[/{color}]",
             ", ".join(cell.applicable_policies) or "—",
-        )
+        ]
+        if explain:
+            row.append(f"[dim]{cell.reason}[/dim]")
+        table.add_row(*row)
     console.print(table)
 
     counts = summarize(cells)
@@ -425,6 +433,12 @@ def seed(config_path: str, tenants: int, as_json: bool, state_out: str | None, d
     show_default=True,
     help="Delete the synthetic tenants this run seeded once it finishes.",
 )
+@click.option(
+    "--sarif-out",
+    "sarif_out",
+    default=None,
+    help="Write a SARIF 2.1.0 report to PATH (for GitHub code scanning).",
+)
 def fuzz(
     config_path: str,
     tenants: int,
@@ -433,6 +447,7 @@ def fuzz(
     shields_out: str | None,
     badge_out: str | None,
     cleanup: bool,
+    sarif_out: str | None,
 ) -> None:
     """Seed N tenants and run cross-tenant chaos. Exit 1 on any breach."""
     cfg = _load(config_path)
@@ -457,6 +472,9 @@ def fuzz(
 
     if cleanup:
         _run_writes(teardown_state, seed_report.to_state(), cfg)
+
+    if sarif_out:
+        Path(sarif_out).write_text(json.dumps(build_sarif(report.breaches, version=__version__), indent=2))
 
     if shields_out or badge_out:
         badge = from_fuzz_report(
@@ -580,7 +598,13 @@ def teardown(config_path: str, state_path: str, as_json: bool) -> None:
 @click.option("--config", "config_path", default="rlsgrid.toml", show_default=True)
 @click.option("--tenants", default=3, show_default=True, type=int)
 @click.option("--json", "as_json", is_flag=True, help="Emit a JSON document instead of a table.")
-def check(config_path: str, tenants: int, as_json: bool) -> None:
+@click.option(
+    "--sarif-out",
+    "sarif_out",
+    default=None,
+    help="Write a SARIF 2.1.0 report to PATH (for GitHub code scanning).",
+)
+def check(config_path: str, tenants: int, as_json: bool, sarif_out: str | None) -> None:
     """One-shot safety check: seed, fuzz, tear down. Exit 1 on any breach.
 
     The headline command — no state files, nothing left behind. Ideal for a
@@ -603,6 +627,9 @@ def check(config_path: str, tenants: int, as_json: bool) -> None:
         report = _run_writes(chaos.run, result, cfg, seeded_tenants=seed_report.tenants)
     finally:
         _run_writes(teardown_state, seed_report.to_state(), cfg)
+
+    if sarif_out:
+        Path(sarif_out).write_text(json.dumps(build_sarif(report.breaches, version=__version__), indent=2))
 
     if as_json:
         _dump_json(

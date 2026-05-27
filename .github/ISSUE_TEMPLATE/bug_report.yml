@@ -1,0 +1,42 @@
+name: Bug report
+description: Something went wrong running rlsgrid against a schema.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The most useful bug reports include a minimal
+        schema (CREATE TABLE + CREATE POLICY) that reproduces the issue.
+  - type: input
+    id: version
+    attributes:
+      label: rlsgrid version
+      description: "`rlsgrid --version`"
+      placeholder: "0.5.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: command
+    attributes:
+      label: Command
+      options: [init, introspect, plan, "gen pgtap", seed, fuzz, check, teardown]
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, what you got. Paste the output.
+    validations:
+      required: true
+  - type: textarea
+    id: schema
+    attributes:
+      label: Minimal schema to reproduce
+      description: A few CREATE TABLE / CREATE POLICY statements that trigger it. Redact anything sensitive.
+      render: sql
+  - type: input
+    id: postgres
+    attributes:
+      label: Postgres / Supabase
+      placeholder: "Postgres 16 / Supabase"

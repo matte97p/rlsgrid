@@ -43,3 +43,24 @@ def test_inet_is_cidr_literal() -> None:
 
 def test_unknown_text_fallback() -> None:
     assert synth_value("citext") == "rlsgrid-fixture"
+
+
+def test_satisfy_check_enum_any_array() -> None:
+    from rlsgrid.synth import satisfy_check
+    assert satisfy_check(["CHECK ((status = ANY (ARRAY['open'::text, 'closed'::text])))"], "status") == "open"
+
+
+def test_satisfy_check_range() -> None:
+    from rlsgrid.synth import satisfy_check
+    assert satisfy_check(["CHECK (((priority >= 1) AND (priority <= 5)))"], "priority") == 1
+
+
+def test_satisfy_check_equality_and_gt() -> None:
+    from rlsgrid.synth import satisfy_check
+    assert satisfy_check(["CHECK ((kind = 'x'::text))"], "kind") == "x"
+    assert satisfy_check(["CHECK ((amount > 0))"], "amount") == 1
+
+
+def test_satisfy_check_none_when_unmatched() -> None:
+    from rlsgrid.synth import satisfy_check
+    assert satisfy_check(["CHECK ((other = 1))"], "missing") is None

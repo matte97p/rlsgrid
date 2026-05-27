@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest a capability or an integration.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you hitting
+      description: The real situation — what your schema looks like and what rlsgrid can't do yet.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you'd like
+      description: How you imagine it working (a flag, a config key, an output format…).
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you've tried
