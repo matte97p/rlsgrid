@@ -494,6 +494,7 @@ def fuzz(
                 "iterations": report.iterations,
                 "skipped": report.skipped,
                 "skip_reasons": dict(report.skip_reasons),
+                "no_probes": report.iterations == 0,
                 "breaches": [
                     {
                         "actor_role": b.actor_role,
@@ -511,6 +512,8 @@ def fuzz(
         sys.exit(0 if report.ok else 1)
 
     if report.ok:
+        if _warn_no_probes(report):
+            return
         console.print(
             f"[green]✓ No breaches[/green] in {report.iterations} iterations "
             f"({report.skipped} skipped)."
@@ -535,6 +538,28 @@ def _print_skip_reasons(report: chaos.FuzzReport) -> None:
     console.print("[dim]Skipped probe reasons:[/dim]")
     for reason, count in report.skip_reasons.most_common():
         console.print(f"  [dim]- {reason}: {count}[/dim]")
+
+
+def _warn_no_probes(report: chaos.FuzzReport) -> bool:
+    """Warn when the fuzz ran zero probes — a clean run there proves nothing.
+
+    Happens when no role has a granted, RLS-gated cell to probe: typically an
+    app that enforces tenant isolation in application code (or via a SQL
+    access function) rather than in RLS. Returns True if the warning fired.
+    """
+    if report.iterations > 0:
+        return False
+    console.print(
+        "[bold yellow]⚠ No cross-tenant probes ran[/bold yellow] — no granted, "
+        "RLS-gated cells to test. This is NOT a clean bill of health."
+    )
+    console.print(
+        "If your tenant isolation lives in the database (RLS policies or a SQL "
+        "access function), check tenant_column / grants. If it lives in your "
+        "application layer (backend code using service_role), rlsgrid cannot "
+        "verify it — that enforcement is outside the database."
+    )
+    return True
 
 
 def _warn_if_no_rows(seed_report, cfg: Config) -> bool:
@@ -638,6 +663,7 @@ def check(config_path: str, tenants: int, as_json: bool, sarif_out: str | None) 
                 "iterations": report.iterations,
                 "skipped": report.skipped,
                 "skip_reasons": dict(report.skip_reasons),
+                "no_probes": report.iterations == 0,
                 "breaches": [
                     {
                         "actor_role": b.actor_role,
@@ -655,6 +681,8 @@ def check(config_path: str, tenants: int, as_json: bool, sarif_out: str | None) 
         sys.exit(0 if report.ok else 1)
 
     if report.ok:
+        if _warn_no_probes(report):
+            return
         console.print(
             f"[green]✓ Safe[/green] — no cross-tenant breaches in "
             f"{report.iterations} iterations ({report.skipped} skipped)."

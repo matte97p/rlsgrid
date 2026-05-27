@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] — 2026-05-27
+
+### Added
+- `check` and `fuzz` now warn loudly when zero cross-tenant probes ran
+  instead of reporting a bare "Safe". This happens when no role has a
+  granted, RLS-gated cell — typically an app that enforces tenant isolation
+  in application code (or a SQL function rlsgrid can't see) rather than in
+  RLS. A clean run there proves nothing, and the previous "✓ Safe / 0
+  iterations" was falsely reassuring for the (common) app-layer Supabase
+  setup. `--json` gains a `no_probes` flag. Surfaced by re-running against
+  GeoSuite, whose isolation lives in Python, not the database.
+
 ## [0.5.1] — 2026-05-27
 
 ### Fixed
