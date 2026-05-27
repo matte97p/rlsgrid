@@ -1,0 +1,1272 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Row-Level Security test matrix + cross-tenant fuzz for Postgres/Supabase.">
+      
+      
+      
+        <link rel="canonical" href="https://matte97p.github.io/rlsgrid/CHANGELOG/">
+      
+      
+        <link rel="prev" href="../RECIPES/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Changelog - rlsgrid</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="rlsgrid" class="md-header__button md-logo" aria-label="rlsgrid" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            rlsgrid
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/matte97p/rlsgrid" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    matte97p/rlsgrid
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="rlsgrid" class="md-nav__button md-logo" aria-label="rlsgrid" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    rlsgrid
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/matte97p/rlsgrid" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    matte97p/rlsgrid
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RECIPES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config recipes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Unreleased]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#031-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.3.1] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.3.1] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#030-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.3.0] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.3.0] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#020-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.0] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.0] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#012-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.2] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.2] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#011-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.1] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.1] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-addendum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0 addendum]
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0 addendum]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known limitations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-2026-05-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0] — 2026-05-26
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0] — 2026-05-26">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Unreleased]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#031-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.3.1] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.3.1] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#030-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.3.0] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.3.0] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#020-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.0] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.0] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#012-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.2] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.2] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verified
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#011-2026-05-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.1] — 2026-05-27
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.1] — 2026-05-27">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-addendum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0 addendum]
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0 addendum]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known limitations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-2026-05-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0] — 2026-05-26
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0] — 2026-05-26">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="changelog">Changelog</h1>
+<p>All notable changes to this project will be documented in this file.</p>
+<p>The format is based on <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a>,
+and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<h2 id="unreleased">[Unreleased]</h2>
+<h2 id="031-2026-05-27">[0.3.1] — 2026-05-27</h2>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li><code>init --out path/in/missing/dirs.toml</code> (and <code>init --from-db</code>) now creates
+  the parent directories instead of crashing with a <code>FileNotFoundError</code>
+  traceback — matching <code>gen pgtap</code>'s behaviour.</li>
+</ul>
+<h2 id="030-2026-05-27">[0.3.0] — 2026-05-27</h2>
+<h3 id="added">Added</h3>
+<ul>
+<li>Self-referential foreign keys are seedable: a hierarchical table with a
+  NOT NULL <code>parent_id</code> → its own <code>id</code> no longer blocks seeding. When the PK
+  is a single uuid, the first row is pointed at itself.</li>
+<li><code>rlsgrid seed --dry-run</code> prints the seed plan (tenant column, detected root
+  table, table order) without writing anything.</li>
+<li>Loud warning when seeding produces zero rows — a wrong <code>tenant_column</code>
+  otherwise yields a misleading "no breach". <code>init --from-db</code> also warns when
+  the guessed tenant column is not a foreign key or several tenant-like
+  foreign keys exist (composite keys are documented as unsupported).</li>
+<li>Docs site (mkdocs-material) published from <code>docs/</code>.</li>
+</ul>
+<h3 id="notes">Notes</h3>
+<ul>
+<li>Verified on a 120-table schema: introspection ~30 ms, matrix build ~2 ms.</li>
+<li>README rewritten for fast comprehension (what / why / use).</li>
+</ul>
+<h2 id="020-2026-05-27">[0.2.0] — 2026-05-27</h2>
+<p>Fewer steps, no manual config, nothing left behind.</p>
+<h3 id="added_1">Added</h3>
+<ul>
+<li><code>rlsgrid init --from-db</code> reads the live schema and writes an annotated
+  config: it guesses the tenant column (preferring foreign keys named like
+  <code>tenant_id</code> / <code>org_id</code> / <code>account_id</code> / …), detects the tenant root table
+  via the FK graph, recognises Supabase (roles + schema excludes), and lists
+  its detection notes so you can sanity-check them.</li>
+<li><code>rlsgrid check</code> — the headline command. Seeds synthetic tenants, fuzzes
+  cross-tenant access, and tears everything down in one shot. Exit 1 on any
+  breach, no state files, nothing left in the database. Ideal for a first run
+  or a CI gate.</li>
+<li><code>rlsgrid fuzz --cleanup/--no-cleanup</code> (default <code>--cleanup</code>) removes the
+  synthetic tenants the run seeded.</li>
+</ul>
+<h3 id="fixed_1">Fixed</h3>
+<ul>
+<li>Cross-tenant SELECT fuzz on the tenant root table silently errored
+  (<code>column "org_id" does not exist</code>) and was skipped — so the root table,
+  where tenant identity lives, was never actually probed. SELECT now matches
+  the target's rows by their seeded primary keys, like UPDATE/DELETE.</li>
+</ul>
+<h2 id="012-2026-05-27">[0.1.2] — 2026-05-27</h2>
+<h3 id="added_2">Added</h3>
+<ul>
+<li>Clean connection-error UX: a bad or unreachable <code>connection.url</code> now exits
+  with a one-line message and code 4 instead of a psycopg traceback.</li>
+<li><code>rlsgrid fuzz</code> reports <em>why</em> probes were skipped (no target row, no primary
+  key, access-function unresolved, …) in both the table and <code>--json</code> output.</li>
+<li>Real pgTAP execution in CI: the generated suite is run with <code>pg_prove</code>
+  against Postgres 16 + pgTAP, so "rlsgrid emits a passing pgTAP suite" is
+  proven, not just asserted non-empty.</li>
+<li>Coverage floor (<code>--cov-fail-under=50</code>) on the unit job.</li>
+<li>Per-stack config recipes in <code>docs/RECIPES.md</code> (Supabase, Prisma, Drizzle,
+  SQLAlchemy/Alembic, Rails, function mode).</li>
+<li>README demo image rendered from real <code>plan</code> + <code>fuzz</code> output.</li>
+</ul>
+<h3 id="verified">Verified</h3>
+<ul>
+<li>Cross-schema topological seeding and tenant-root detection are covered by
+  unit tests; the full pipeline runs against a rich multi-tenant schema in CI.</li>
+</ul>
+<h2 id="011-2026-05-27">[0.1.1] — 2026-05-27</h2>
+<p>Correctness pass driven by running the full pipeline against a rich
+multi-tenant schema (FK chains, composite PKs, enums, CHECK constraints,
+a no-RLS table, a service-role-only table). Several bugs that the toy
+example schema could never surface are fixed here.</p>
+<h3 id="fixed_2">Fixed</h3>
+<ul>
+<li><strong>Tenant-root seeding.</strong> When the tenant is keyed on a root table's own PK
+  and children reference it through <code>tenant_column</code> (e.g. <code>orgs.id</code> ←
+  <code>projects.org_id</code>), the seeder previously skipped the root table and every
+  child INSERT failed its foreign key — producing zero seeded rows and a
+  false "no breach" fuzz result. The seeder now detects the root table via
+  the FK graph and seeds it first.</li>
+<li><strong>pgTAP probes asserted the wrong thing.</strong> RLS denial is silent (zero rows),
+  not a <code>42501</code>, so the old <code>throws_ok</code> assertions failed for the wrong
+  reason. Base probes are now grant-aware: a missing privilege asserts
+  <code>throws_ok('42501')</code>, an RLS-denied-but-granted SELECT asserts
+  <code>is(count, 0)</code>, and an allowed SELECT asserts <code>lives_ok</code>.</li>
+<li><strong>Invalid UPDATE probe.</strong> The UPDATE probe used <code>SET ctid = ctid</code>, which
+  Postgres rejects (<code>cannot assign to system column</code>). It now self-assigns a
+  real primary-key column.</li>
+<li><strong>CONDITIONAL SELECT on the root table.</strong> The cross-tenant SELECT assertion
+  assumed every table carries <code>tenant_column</code>; it now identifies the target's
+  rows by their seeded primary keys, which also works for the root table.</li>
+</ul>
+<h3 id="added_3">Added</h3>
+<ul>
+<li>GRANT introspection (<code>information_schema.role_table_grants</code>) so the matrix
+  and pgTAP emitter can tell a privilege denial apart from an RLS denial.</li>
+<li>Rich multi-tenant example under <code>examples/multitenant/</code> exercised end to
+  end in CI.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li>Cross-tenant INSERT coverage moved entirely to the runtime fuzz (which can
+  build a fully valid row); the static pgTAP suite no longer emits INSERT
+  CONDITIONAL probes.</li>
+</ul>
+<h2 id="010-addendum">[0.1.0 addendum]</h2>
+<h3 id="added_4">Added</h3>
+<ul>
+<li>GitHub Action <code>matte97p/rlsgrid@v1</code> lives in this repo (was previously a
+  separate <code>matte97p/rlsgrid-action</code> repo, now archived). Composite action
+  with <code>command</code>, <code>config</code>, <code>database-url</code>, <code>tenants</code>, <code>python-version</code>,
+  <code>version</code>, <code>pgtap-out</code>, <code>fail-on-breach</code> inputs and <code>result-json</code> +
+  <code>breach-count</code> outputs.</li>
+</ul>
+<h3 id="added_5">Added</h3>
+<ul>
+<li>Prod-guard: <code>seed</code> and <code>fuzz</code> refuse to run when <code>connection.url</code>
+  matches any pattern in <code>[safety].forbid_url_patterns</code>. Set
+  <code>RLSGRID_I_KNOW_WHAT_IM_DOING=1</code> to override.</li>
+<li><code>--json</code> flag on <code>introspect</code>, <code>plan</code>, <code>seed</code>, and <code>fuzz</code> so CI workflows
+  can consume the output without scraping Rich tables.</li>
+<li>Configurable JWT shape (<code>tenancy.jwt_shape = "json"</code> for Supabase v2 —
+  the new default — or <code>"individual"</code> for legacy PostgREST), plus
+  per-claim templates in <code>tenancy.jwt_claims</code>. The previous hard-coded
+  <code>request.jwt.claim.{sub,tenant_id}</code> setup was wrong for any post-2022
+  Supabase deployment.</li>
+<li><code>seed --state-out path.json</code> and <code>fuzz --state-out path.json</code> persist
+  the seeded tenant UUIDs and PKs for re-use.</li>
+<li>New <code>teardown</code> command consumes that state file and deletes the seeded
+  rows so the seeder is idempotent.</li>
+<li><code>gen pgtap --from-state path.json</code> emits CONDITIONAL cross-tenant
+  assertions in the pgTAP suite. Each cell becomes a real
+  <code>SELECT is(count(*), 0)</code> (or <code>throws_ok</code> for INSERT, or
+  <code>WITH affected AS (UPDATE …) SELECT is(count(*), 0)</code> for UPDATE/DELETE)
+  using the actor and target UUIDs from the state file. CONDITIONAL
+  coverage is no longer fuzz-only.</li>
+<li>Function-mode placeholder system now accepts arbitrary <code>{name}</code> markers
+  with safe Postgres parameter binding: <code>{user_id}</code>, <code>{tenant_id}</code>,
+  <code>{target_tenant_id}</code>, <code>{target_user_id}</code>, <code>{row_id}</code>, and
+  <code>{row.&lt;column&gt;}</code> for any column on the target row. Multi-arg signatures
+  like <code>has_access({user_id}, {row.account_id}, 'view')</code> work out of the
+  box.</li>
+<li>Composite primary keys are now respected by the UPDATE probe — every PK
+  column is included in both the SET and WHERE clauses.</li>
+<li>Verified-RLS badge: <code>fuzz --shields-out badge.json</code> emits a shields.io
+  endpoint payload, <code>fuzz --badge-out badge.svg</code> emits a self-contained
+  SVG. Both reflect the same pass/fail outcome with leak count.</li>
+</ul>
+<h3 id="changed_1">Changed</h3>
+<ul>
+<li><code>seed_tenants</code> now returns a <code>SeedReport</code> with <code>tenants</code>, <code>skipped</code>
+  (per-table reason: unresolved FK, NOT NULL violation, CHECK failure, ...)
+  and <code>check_warnings</code>. The CLI surfaces all three so users can see exactly
+  which tables their fuzz run will exercise.</li>
+<li>Schema introspection now reads <code>pg_enum</code> and <code>pg_constraint</code> (CHECK) so
+  synthetic values land on valid enum labels and seeders flag CHECK-heavy
+  tables instead of silently producing zero coverage.</li>
+<li>INSERT fuzz probe now fills every NOT NULL column without a default —
+  previously it inserted only the tenant column and was rejected by <code>23502</code>
+  on most real schemas, producing false-negative "no breach" reports.</li>
+<li>UPDATE fuzz probe now self-assigns the primary key column
+  (<code>SET pk = pk WHERE pk = ?</code>) instead of touching the <code>ctid</code> system
+  column, which some Postgres builds refuse.</li>
+</ul>
+<h3 id="known-limitations">Known limitations</h3>
+<ul>
+<li>Live smoke validation runs in CI against real Postgres 16.
+  Local-only <code>py-pglite</code> reproductions hit segfaults under introspection
+  query load — track upstream pglite stability, not an <code>rlsgrid</code> issue.</li>
+</ul>
+<h2 id="010-2026-05-26">[0.1.0] — 2026-05-26</h2>
+<h3 id="added_6">Added</h3>
+<ul>
+<li>Schema introspection: tables, RLS state, policies, roles, columns, foreign
+  keys, primary keys.</li>
+<li><code>build_matrix</code> classifies every (role, table, operation) as
+  <code>allow</code> / <code>deny</code> / <code>conditional</code> / <code>unrestricted</code>.</li>
+<li>pgTAP emitter producing one assertion per ALLOW/DENY cell.</li>
+<li>Schema-aware fixture seeder: walks FK graph in topological order, fills
+  child rows with PKs from already-seeded parents so cross-tenant probes are
+  meaningful instead of trivially failing on referential-integrity errors.</li>
+<li>Cross-tenant chaos fuzz (<code>rlsgrid fuzz</code>) with four probe types:
+  SELECT leak, INSERT-with-foreign-tenant-id, UPDATE on foreign row,
+  DELETE on foreign row. Probes target <code>CONDITIONAL</code> and <code>ALLOW</code> matrix cells
+  directly instead of picking tables at random.</li>
+<li>Function mode (<code>tenancy.mode = "function"</code>): when access is decided by a
+  SQL helper instead of by RLS, the fuzz harness calls the helper with
+  cross-tenant args and asserts it returns false.</li>
+<li>CLI: <code>init</code>, <code>introspect</code>, <code>plan</code>, <code>gen pgtap</code>, <code>seed</code>, <code>fuzz</code>.</li>
+<li>Example Supabase-style blog schema in <code>examples/blog/schema.sql</code>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "navigation.sections"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
