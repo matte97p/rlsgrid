@@ -34,10 +34,15 @@ not the policies. rlsgrid tests the policies, against a real database.
 ## Use it
 
 ```bash
+sudo apt install python3-venv -y
+python3 -m venv ~/venvs/rlsgrid-env
+source ~/venvs/rlsgrid-env/bin/activate
 pip install rlsgrid
-
+# if ipv6
 export DATABASE_URL=postgresql://user:pw@host/db   # use staging, never prod
-
+# if ipv4
+getent ahosts db-host | grep STREAM | grep 4
+export DATABASE_URL=postgresql://user:pw@<response>/db
 rlsgrid init --from-db      # read the schema, write an annotated config
 rlsgrid check --tenants 5   # seed → fuzz → teardown. exit 1 on any leak.
 ```
