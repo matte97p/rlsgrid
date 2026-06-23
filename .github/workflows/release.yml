@@ -1,7 +1,19 @@
 name: release
 
+# Two ways to release to PyPI (trusted publishing, no token):
+#   1. Push a `vX.Y.Z` tag — explicit release; the tag must match pyproject's
+#      version. Unchanged from before.
+#   2. Push to `main` — auto-release on content drift. The build job packs an
+#      sdist and diffs its shipped files (README, src/, pyproject.toml; generated
+#      metadata excluded) against the sdist currently on PyPI. If anything a user
+#      would download changed, it patch-bumps off the published version and
+#      publishes; otherwise it does nothing. This keeps the PyPI page (README +
+#      metadata) from going stale after a docs edit, with no commit back to the
+#      repo — so it works even with `main` protected.
+
 on:
   push:
+    branches: [main]
     tags:
       - "v*.*.*"
 
@@ -9,27 +21,95 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.plan.outputs.publish }}
+      version: ${{ steps.plan.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Extract version from tag
-        id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-      - name: Verify pyproject version matches tag
-        run: |
-          pyver=$(python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')
-          if [ "$pyver" != "${{ steps.version.outputs.version }}" ]; then
-            echo "::error::pyproject.toml version ($pyver) does not match tag (${{ steps.version.outputs.version }})"
-            exit 1
-          fi
       - name: Install build tooling
-        run: python -m pip install --upgrade pip build
-      - name: Build sdist + wheel
-        run: python -m build
+        run: python -m pip install --upgrade pip build packaging
+
+      - name: Decide version + whether to publish
+        id: plan
+        run: |
+          set -euo pipefail
+          NAME="$(python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["name"])')"
+          LOCAL="$(python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')"
+
+          # --- explicit tag release: tag must match pyproject, publish as-is ---
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            if [ "$VERSION" != "$LOCAL" ]; then
+              echo "::error::pyproject.toml version ($LOCAL) does not match tag ($VERSION)"; exit 1
+            fi
+            echo "Tag release → $NAME $VERSION"
+            echo "publish=true"     >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # --- push to main: auto-release on shipped-content drift ---
+          PUBLISHED="$(curl -fsSL "https://pypi.org/pypi/$NAME/json" 2>/dev/null | python -c 'import json,sys; print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null || true)"
+          if [ -z "$PUBLISHED" ]; then
+            echo "Not on PyPI yet → first release of $NAME $LOCAL"
+            echo "publish=true"   >> "$GITHUB_OUTPUT"
+            echo "version=$LOCAL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # pyproject deliberately bumped ahead of PyPI → release that version.
+          if python -c "import sys; from packaging.version import Version; sys.exit(0 if Version('$LOCAL') > Version('$PUBLISHED') else 1)"; then
+            echo "pyproject ($LOCAL) is ahead of PyPI ($PUBLISHED) → release $LOCAL"
+            echo "publish=true"   >> "$GITHUB_OUTPUT"
+            echo "version=$LOCAL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Baseline = what's live on PyPI. Build a comparison sdist AT the
+          # published version (so the version string isn't a spurious diff) and
+          # compare its files against the published sdist, ignoring generated
+          # metadata. What's left (README, src/, pyproject.toml) is the real signal.
+          tmp="$(mktemp -d)"
+          cp pyproject.toml "$tmp/pyproject.bak"
+          sed -i -E "s/^version[[:space:]]*=[[:space:]]*\"[^\"]*\"/version = \"$PUBLISHED\"/" pyproject.toml
+          python -m build --sdist --outdir "$tmp/local" >/dev/null
+          cp "$tmp/pyproject.bak" pyproject.toml
+
+          if ! pip download --no-deps --no-binary :all: "$NAME==$PUBLISHED" -d "$tmp/pub" >/dev/null 2>&1; then
+            echo "::warning::could not fetch the published sdist for $NAME==$PUBLISHED — skipping auto-release."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p "$tmp/lx" "$tmp/px"
+          tar -xzf "$tmp"/local/*.tar.gz -C "$tmp/lx"
+          tar -xzf "$tmp"/pub/*.tar.gz   -C "$tmp/px"
+          LX="$tmp/lx/$(ls "$tmp/lx")"
+          PX="$tmp/px/$(ls "$tmp/px")"
+
+          # Ignore generated metadata and repo-plumbing that some build backends
+          # (e.g. hatchling) sweep into the sdist — CI/VCS edits must not release.
+          if diff -rq -x PKG-INFO -x '*.egg-info' -x SOURCES.txt -x .github -x .gitignore "$PX" "$LX" >/dev/null 2>&1; then
+            echo "Shipped files identical to $NAME $PUBLISHED — nothing to publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          NEW="$(python -c "from packaging.version import Version; v=Version('$PUBLISHED'); print(f'{v.major}.{v.minor}.{v.micro+1}')")"
+          echo "Shipped files changed since $NAME $PUBLISHED → auto patch-release $NEW"
+          echo "publish=true"  >> "$GITHUB_OUTPUT"
+          echo "version=$NEW"  >> "$GITHUB_OUTPUT"
+
+      - name: Set version + build
+        if: steps.plan.outputs.publish == 'true'
+        run: |
+          set -euo pipefail
+          sed -i -E "s/^version[[:space:]]*=[[:space:]]*\"[^\"]*\"/version = \"${{ steps.plan.outputs.version }}\"/" pyproject.toml
+          python -m build
+
       - name: Upload dist artefacts
+        if: steps.plan.outputs.publish == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: dist
@@ -37,6 +117,7 @@ jobs:
 
   publish:
     needs: build
+    if: needs.build.outputs.publish == 'true'
     runs-on: ubuntu-latest
     environment:
       name: pypi
