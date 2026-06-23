@@ -5,6 +5,8 @@ before your users do.**
 
 [![CI](https://github.com/matte97p/rlsgrid/actions/workflows/ci.yml/badge.svg)](https://github.com/matte97p/rlsgrid/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/rlsgrid.svg)](https://pypi.org/project/rlsgrid/)
+[![Downloads](https://img.shields.io/pypi/dm/rlsgrid.svg)](https://pypistats.org/packages/rlsgrid)
+[![GitHub stars](https://img.shields.io/github/stars/matte97p/rlsgrid?style=flat&logo=github)](https://github.com/matte97p/rlsgrid/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 
@@ -140,3 +142,15 @@ Built by [Matteo Perino](https://github.com/matte97p) while shipping
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Related tools
+
+Part of my open-source toolkit — [github.com/matte97p](https://github.com/matte97p):
+
+- [pentest-framework](https://github.com/matte97p/pentest-framework) — low-noise pentest orchestration, normalized to one schema and rendered to a PDF
+- [demowright](https://github.com/matte97p/demowright) — record polished product-demo videos from a script that lives in your repo
+- [GeoSuite CLIs](https://github.com/TryGeoSuite) — zero-dep Generative Engine Optimization toolkit
+
+---
+
+⭐ If rlsgrid caught a leak (or proved you safe), [give it a star](https://github.com/matte97p/rlsgrid) — it helps other Supabase teams find it.
