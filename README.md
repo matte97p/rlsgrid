@@ -63,7 +63,7 @@ breach, so it drops straight into CI. A leak looks like:
 ```yaml
 - uses: matte97p/rlsgrid@v1
   with:
-    command: check
+    command: fuzz   # seeds synthetic tenants, probes isolation, fails the build on any leak
     database-url: ${{ secrets.STAGING_DB_URL }}
 ```
 
