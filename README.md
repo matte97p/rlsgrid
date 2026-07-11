@@ -154,3 +154,8 @@ Part of my open-source toolkit — [github.com/matte97p](https://github.com/matt
 ---
 
 ⭐ If rlsgrid caught a leak (or proved you safe), [give it a star](https://github.com/matte97p/rlsgrid) — it helps other Supabase teams find it.
+
+
+---
+
+<sub>🌐 Built by **Matteo Perino** — [matteoperino.dev](https://matteoperino.dev)</sub>
