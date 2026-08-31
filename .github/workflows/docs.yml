@@ -33,7 +33,7 @@ jobs:
       - name: Stage root docs into the site
         run: cp CHANGELOG.md docs/CHANGELOG.md
       - run: mkdocs build --strict
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
